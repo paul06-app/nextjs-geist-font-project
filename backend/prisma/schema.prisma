@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  createdPersons Person[]      @relation("CreatedBy")
+  pointHistories PointHistory[] @relation("ModifiedBy")
+
+  @@map("users")
+}
+
+model Person {
+  id        String   @id @default(cuid())
+  name      String
+  score     Int      @default(0)
+  maxScore  Int      @default(200)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+  createdById String
+
+  pointHistories PointHistory[]
+
+  @@map("persons")
+}
+
+model PointHistory {
+  id        String   @id @default(cuid())
+  points    Int      // Peut être positif ou négatif
+  comment   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  person     Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  personId   String
+  modifiedBy User   @relation("ModifiedBy", fields: [userId], references: [id])
+  userId     String
+
+  @@map("point_histories")
+}
